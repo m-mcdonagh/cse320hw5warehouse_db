@@ -1,2 +1,2 @@
-# hw5-template
-This is an empty repo for the HW#5
+# HW 5
+Good luck and don't cheat!
