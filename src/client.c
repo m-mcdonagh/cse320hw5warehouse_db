@@ -1,7 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include "shell.h"
+#include "error_checking.h"
 #define equals(s1, s2) !strcmp(s1, s2)
 #define BOOLEAN char
 #define TRUE 1
@@ -60,7 +65,36 @@ BOOLEAN executeCommand(char** args){
 	return TRUE;
 }
 
-int main(void){
-	shell_loop(16);
+int main(int argc, char** argv){
+	if (argc != 2){
+		if (argc > 0)
+			fprintf(stderr, "Invalid Arguments for %s. Please enter an integer between 0-3 inclusive\n", *argv);
+		else
+			fprintf(stderr, "Invalid Arguments for program. Please enter an integer between 0-3 inclusive\n");
+		exit(EXIT_FAILURE);
+	}
+	int inputInt = atoi(*++argv);
+	if (inputInt < 0 || inputInt > 3){
+		fprintf(stderr, "Invalid Arguments for %s. Please enter an integer between 0-3 inclusive\n", *--argv);
+		exit(EXIT_FAILURE);
+	}
+
+	char in[16] = "tmp/server_out";
+	char out[16] = "tmp/server_in";
+	strcat(in, *argv);
+	strcat(out, *argv);
+
+	printf("%s %s\n", in, out);
+
+	FILE* inFifo = Fopen(in, "r");
+	FILE* outFifo = Fopen(out, "w");
+
+	fputs("Greetings from the client!", outFifo);
+	sleep(10);
+	char output[256];
+	fgets(output, 256, inFifo);
+	printf("Message from server: %s\n", output);
+
+	//shell_loop(16);
 }
 

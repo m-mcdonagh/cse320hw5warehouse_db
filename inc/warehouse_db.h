@@ -1,0 +1,2 @@
+
+void initializeDatabase(int maxRecords);

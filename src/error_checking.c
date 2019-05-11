@@ -2,8 +2,10 @@
 #include <stdio.h>
 #include <signal.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <sys/wait.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 
 pid_t Fork(){
 	pid_t output;
@@ -33,6 +35,15 @@ void childReaper(int sig){
 	return;
 }
 
+int Open(const char* filename, int flags){
+	int file;
+	if ((file = open(filename, flags)) < 0){
+		fprintf(stderr,"Error opening %s. Please read the README.md!\n", filename);
+		exit(EXIT_FAILURE);
+	}
+	return file;
+}
+
 FILE* Fopen(const char* filename, const char* mode){
 	FILE* output = fopen(filename, mode);
 	if (output)
@@ -40,5 +51,13 @@ FILE* Fopen(const char* filename, const char* mode){
 	else{ 
 		fprintf(stderr, "Error opening \"%s\".\n", filename);
 		exit(EXIT_FAILURE);
+	}
+}
+
+void Mkfifo(const char* pathname, mode_t mode){
+	if (mkfifo(pathname, mode)){
+		if (access(pathname, F_OK)){
+			fprintf(stderr, "Error creating FIFOs\n");
+		}
 	}
 }

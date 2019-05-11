@@ -1,62 +1,32 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include <string.h>
-#include <signal.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include "error_checking.h"
-#include "shell.h"
-#define equals(s1, s2) !strcmp(s1, s2)
-#define BOOLEAN char
-#define TRUE 1
-#define FALSE 0
 
-BOOLEAN executeCommand(char** args){
-	if (!args || !*args){
-		fprintf(stderr, "Invalid Command\n");
-		return TRUE;
-	}
+FILE* inFifo[4];
+FILE* outFifo[4];
+
+void initializeDatabase(int maxRecords){
+	inFifo[0] = Fopen("tmp/server_in0", "r");
+	printf("done\n");
+	inFifo[1] = Fopen("tmp/server_in1", "r");
+	inFifo[2] = Fopen("tmp/server_in2", "r");
+	inFifo[3] = Fopen("tmp/server_in3", "r");
+	outFifo[0] = Fopen("tmp/server_out0", "w");
+	outFifo[1] = Fopen("tmp/server_out2", "w");
+	outFifo[2] = Fopen("tmp/server_out3", "w");
+	outFifo[3] = Fopen("tmp/server_out4", "w");
 	
-	else if (equals(*args, "list")){
-		if (++args && *args){
-			//list ID
-		}
-		else{
-			//list
-		}
-	}
-
-	else if (equals(*args, "dump")){
-	
-	}
-
-	else if (equals(*args, "exit")){
-		exit(EXIT_SUCCESS);
-	}
-
-	else {
-		fprintf(stderr, "Invalid Command\n");
-		return TRUE;
-	}
-
-	return FALSE;
-}
-
-void startShell(int sig){
-	printf("\nPlease Enter a Command for the Warehouse Database Server\n");
-	shell_loop(16);
-}
-
-int maxRecords;
-
-int main(int argc, char** argv){
-	if (argc != 2){
-		if (argc > 0)
-			fprintf(stderr, "Invalid Arguments for %s\n", *argv);
-		else 
-			fprintf(stderr, "Invalid Arguments for program\n");
-		exit(EXIT_FAILURE);
-	}
-	Signal(SIGINT, startShell);
-	maxRecords = atoi(*++argv);
-	
-	while(TRUE);
+	printf("Server putted\n");	
+	fputs("Greetings from the server!", outFifo[0]);
+	sleep(10);
+	char output[256];
+	printf("Server slept\n");
+	fgets(output, 256, inFifo[0]);
+	printf("Message from client: %s\n", output);
 }
