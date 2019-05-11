@@ -60,5 +60,9 @@ int main(int argc, char** argv){
 	
 	printf("Initializing Database\n");	
 	initializeDatabase(atoi(*++argv));
-
+	
+	while(TRUE){
+		newConnectionCheck();
+		processRequest();
+	}
 }

@@ -8,25 +8,59 @@
 #include <unistd.h>
 #include "error_checking.h"
 
-FILE* inFifo[4];
-FILE* outFifo[4];
+int conn_est;
+int conn_conf;
+int inFifo[4] =    {-1,-1,-1,-1};
+int outFifo[4] =   {-1,-1,-1,-1};
+char filein[16] =  "tmp/server_in ";
+char fileout[16] = "tmp/server_out ";
+
+void reinitialize(int sig){
+	conn_conf = Open("tmp/conn_conf", O_WRONLY);
+	fcntl(conn_conf, F_SETFL, O_NONBLOCK);
+}
 
 void initializeDatabase(int maxRecords){
-	inFifo[0] = Fopen("tmp/server_in0", "r");
-	printf("done\n");
-	inFifo[1] = Fopen("tmp/server_in1", "r");
-	inFifo[2] = Fopen("tmp/server_in2", "r");
-	inFifo[3] = Fopen("tmp/server_in3", "r");
-	outFifo[0] = Fopen("tmp/server_out0", "w");
-	outFifo[1] = Fopen("tmp/server_out2", "w");
-	outFifo[2] = Fopen("tmp/server_out3", "w");
-	outFifo[3] = Fopen("tmp/server_out4", "w");
-	
-	printf("Server putted\n");	
-	fputs("Greetings from the server!", outFifo[0]);
-	sleep(10);
-	char output[256];
-	printf("Server slept\n");
-	fgets(output, 256, inFifo[0]);
-	printf("Message from client: %s\n", output);
+	conn_est =  Open("tmp/conn_est", O_RDONLY);
+	conn_conf = Open("tmp/conn_conf", O_WRONLY);
+	fcntl(conn_est, F_SETFL, O_NONBLOCK);
+	fcntl(conn_conf, F_SETFL, O_NONBLOCK);
+	Signal(SIGPIPE, reinitialize);
+}
+
+void newConnectionCheck(void){
+	char c;
+	int index;
+	read(conn_est, &c, 1);
+	if (isdigit(c)){
+		index = c - '0';
+		if (index > 3 || index < 0 || inFifo[index] != -1 || outFifo[index] != -1){
+			write(conn_conf, "0", 1);
+			sleep(1);
+			return;
+		}
+		write(conn_conf, "1", 1);
+		filein[13] = c;
+		fileout[14] = c;
+		inFifo[index]  = Open(filein, O_RDONLY);
+		outFifo[index] = Open(fileout, O_WRONLY);
+		fcntl(inFifo[index], F_SETFL, O_NONBLOCK);
+		fcntl(outFifo[index], F_SETFL, O_NONBLOCK);
+	}
+	sleep(1);
+}
+
+void processRequest(void){
+	char msg[32];
+	int i;
+	for (i=0; i<4; i++){
+		if (inFifo[i] != -1 && outFifo[i] != -1){
+			//Test Code
+			write(outFifo[i], "Greetings from the Server", 32);
+			sleep(1);
+			read(inFifo[i], msg, 32);
+			if (msg[0] != EOF)
+				printf("Message from %d: %s\n", i, msg);
+		}
+	}
 }
