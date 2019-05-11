@@ -72,7 +72,7 @@ void checkRequest(void){
 	int i;
 	for (i=0; i<4; i++){
 		if (inFifo[i] != -1 && outFifo[i] != -1){
-			read(inFifo[i], msg, 32);
+			read(inFifo[i], msg, 256);
 			if (msg[0] != '\0')
 				processRequest(i, msg);
 		}
@@ -88,11 +88,24 @@ void processRequest(int client, char* msg){
 		else{
 			char out[256];
 			sprintf(out, "%d", i);
-			write(outFifo[client], out, 255);
+			write(outFifo[client], out, 256);
 			entries[i].valid = TRUE;
 			entries[i].client = client;
 		}
 	}
+	if (equals(msg, "dealloc")){
+		sleep(1);
+		char id[256];
+		read(inFifo[client], id, 256);
+		int i = atoi(id);
+		if (i < max && i >= 0 && entries[i].client == client && entries[i].valid){
+			entries[i].valid = FALSE;
+			write(outFifo[client], "SUCCESS", 256);
+		}
+		else
+			write(outFifo[client], "FAILURE", 256);
+	}
+
 }
 
 void cleanUp(void){
@@ -101,7 +114,7 @@ void cleanUp(void){
 }
 
 void print_entry(int i){
-	printf("Art Entry #%d: \"%s\" from client %d\n", entries[i].id, entries[i].name ? entries[i].name : "[none]", entries[i].client);
+	printf("Art Entry #%d from client %2d is%s valid.  Named %c%s%c\n", entries[i].id, entries[i].client, entries[i].valid ? "   " : "n't", entries[i].name? '\"' : '[', entries[i].name ? entries[i].name : "none", entries[i].name? '\"' : ']');
 }	
 
 void list(void){

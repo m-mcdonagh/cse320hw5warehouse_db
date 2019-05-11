@@ -56,7 +56,22 @@ void alloc(void){
 	printf("Art Allocated with ID %s\n", id);
 }
 
-void dealloc(int id){}
+void dealloc(int id){
+	char receipt[256];
+	char idString[256];
+
+	write(outFifo, "dealloc", 256);
+	sleep(1);
+	sprintf(idString, "%d",  id);	
+	write(outFifo, idString, 256);
+	sleep(1);
+	
+	read(inFifo, receipt, 256);
+	if (equals(receipt, "SUCCESS"))
+		printf("%d deallocated!\n", id);
+	else
+		fprintf(stderr, "Error: Deallocation Failed (make sure this client controls %d)\n", id);
+}
 
 void readId(int id){}
 
