@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include "client.h"
 #include "error_checking.h"
+#define equals(s1, s2) !strcmp(s1, s2)
 #define BOOLEAN char
 #define TRUE 1
 #define FALSE 0
@@ -44,11 +45,15 @@ void start(char* port){
 }
 
 void alloc(void){
-	write(outFifo, "Greetings from the client!", 32);
+	char id[256];
+	write(outFifo, "alloc", 256);
 	sleep(1);
-	char output[256];
-	read(inFifo, output, 32);
-	printf("Message from server: %s\n", output);
+	read(inFifo, id, 256);
+	if (equals(id, "OUT OF MEMORY")){
+		fprintf(stderr, "Error: Server out of Memory\n");
+		return;
+	}
+	printf("Art Allocated with ID %s\n", id);
 }
 
 void dealloc(int id){}

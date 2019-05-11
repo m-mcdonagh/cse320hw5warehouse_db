@@ -23,7 +23,7 @@ BOOLEAN executeCommand(char** args){
 			//list ID
 		}
 		else{
-			//list
+			list();
 		}
 	}
 
@@ -32,6 +32,7 @@ BOOLEAN executeCommand(char** args){
 	}
 
 	else if (equals(*args, "exit")){
+		cleanUp();
 		exit(EXIT_SUCCESS);
 	}
 
@@ -42,8 +43,6 @@ BOOLEAN executeCommand(char** args){
 
 	return FALSE;
 }
-
-extern void print_fifos(void);
 
 void startShell(int sig){
 	printf("\nPlease Enter a Command for the Warehouse Database Server\n");
@@ -65,6 +64,6 @@ int main(int argc, char** argv){
 	
 	while(TRUE){
 		newConnectionCheck();
-		processRequest();
+		checkRequest();
 	}
 }
