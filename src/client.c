@@ -6,27 +6,30 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include "shell.h"
+#include "client.h"
 #include "error_checking.h"
 #define equals(s1, s2) !strcmp(s1, s2)
 #define BOOLEAN char
 #define TRUE 1
 #define FALSE 0
 
+char port[2];
+
 BOOLEAN executeCommand(char** args){
 	if (!args || !*args)
 		fprintf(stderr, "Invalid Command\n");
 	
 	else if (equals(*args, "start")){
-		
+		start(port);
 	}
 
 	else if (equals(*args, "alloc")){
-			
+		alloc();
 	}
 
 	else if (equals(*args, "dealloc")){
 		if (++args && *args){
-
+			dealloc(atoi(*args));
 		}
 		else
 			fprintf(stderr, "Invalid Arguments for \"dealloc\"\n");
@@ -34,7 +37,7 @@ BOOLEAN executeCommand(char** args){
 
 	else if (equals(*args, "read")){
 		if (++args && *args){
-
+			readId(atoi(*args));
 		}
 		else 
 			fprintf(stderr, "Invalid Arguments for \"read\"\n");
@@ -42,22 +45,24 @@ BOOLEAN executeCommand(char** args){
 
 	else if (equals(*args, "store")){
 		if (++args && *args && ++args && *args){
-		
+			store(atoi(*--args), *++args);
 		}
 		else 
 			fprintf(stderr, "Invalid Arguments for \"store\"\n");
 	}
 
 	else if (equals(*args, "close")){
-		
+		closeConnection();
 	}
 
 	else if (equals(*args, "infotab")){
-		
+		infotab();
 	}
 
-	else if (equals(*args, "exit"))
+	else if (equals(*args, "exit")){
+		closeConnection();
 		return FALSE;
+	}
 
 	else 
 		fprintf(stderr, "Invalid Command\n");
@@ -79,34 +84,10 @@ int main(int argc, char** argv){
 		fprintf(stderr, "Invalid Arguments for %s. Please enter an integer between 0-3 inclusive\n", *--argv);
 		exit(EXIT_FAILURE);
 	}
+	
+	port[0] = **argv;
+	port[1] = '\0';
 
-	// Establishes a connection with the server, tells it which FIFO to use, and makes sure another client isn't on that FIFO
-	int conn_est = Open("tmp/conn_est", O_WRONLY);
-	int conn_conf = Open("tmp/conn_conf", O_RDONLY);
-	write(conn_est, *argv, 1);
-	sleep(1);
-	char c;
-	read(conn_conf, &c, 1);
-	if (c == '0'){
-		printf("Error: there exists a client with connection number %s. Please try a different number (0-3).\n", *argv);
-		exit(EXIT_FAILURE);
-	}
-
-	// Opens the Correct FIFO
-	char in[16] = "tmp/server_out ";
-	char out[16] = "tmp/server_in ";
-	in[14]  = *argv[0];
-	out[13] = *argv[0];
-	int outFifo = Open(out, O_WRONLY);
-	int inFifo = Open(in, O_RDONLY);
-
-	// Test Code
-	write(outFifo, "Greetings from the client!", 32);
-	sleep(1);
-	char output[256];
-	read(inFifo, output, 32);
-	printf("Message from server: %s\n", output);
-
-	//shell_loop(16);
+	shell_loop(16);
 }
 

@@ -43,6 +43,8 @@ BOOLEAN executeCommand(char** args){
 	return FALSE;
 }
 
+extern void print_fifos(void);
+
 void startShell(int sig){
 	printf("\nPlease Enter a Command for the Warehouse Database Server\n");
 	shell_loop(16);

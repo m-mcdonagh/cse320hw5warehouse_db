@@ -29,7 +29,7 @@ void initializeDatabase(int maxRecords){
 }
 
 void newConnectionCheck(void){
-	char c;
+	char c = 0;
 	int index;
 	read(conn_est, &c, 1);
 	if (isdigit(c)){
@@ -50,8 +50,10 @@ void newConnectionCheck(void){
 	sleep(1);
 }
 
+char msg[32];
+
 void processRequest(void){
-	char msg[32];
+	msg[0] = '\0';
 	int i;
 	for (i=0; i<4; i++){
 		if (inFifo[i] != -1 && outFifo[i] != -1){
@@ -59,8 +61,19 @@ void processRequest(void){
 			write(outFifo[i], "Greetings from the Server", 32);
 			sleep(1);
 			read(inFifo[i], msg, 32);
-			if (msg[0] != EOF)
+			if (msg[0] != '\0')
 				printf("Message from %d: %s\n", i, msg);
 		}
 	}
+}
+
+void print_fifos(void){
+	printf("In Fifos:");
+	int i;
+	for (i=0; i<4; i++)
+		printf(" %d", inFifo[i]);
+	printf("\nOut Fifos:");
+	for (i=0; i<4; i++)
+		printf(" %d", outFifo[i]);
+	printf("\n");
 }
