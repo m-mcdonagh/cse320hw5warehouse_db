@@ -20,13 +20,13 @@ BOOLEAN executeCommand(char** args){
 	
 	else if (equals(*args, "list")){
 		if (++args && *args)
-			print_entry(atoi(*args));
+			list(atoi(*args));
 		else
-			list();
+			listAll();
 	}
 
 	else if (equals(*args, "dump")){
-	
+		dump();
 	}
 
 	else if (equals(*args, "exit")){

@@ -149,15 +149,24 @@ void cleanUp(void){
 	}
 }
 
+void list(int id){
+
+}
+
+void listAll(void){
+
+}
+
 void print_entry(int i){
 	printf("Art Entry #%d from client %2d is%s\tNamed %c%s%c\n", entries[i].id, entries[i].client, entries[i].valid ? " valid.\t" : "n't valid.", entries[i].name? '\"' : '[', entries[i].name ? entries[i].name : "none", entries[i].name? '\"' : ']');
 }
 
-void list(void){
+void dump(void){
 	int i;
 	for (i=0; i<max; i++)
 		print_entry(i);
 }
+
 
 void print_fifos(void){
 	printf("In Fifos:");
