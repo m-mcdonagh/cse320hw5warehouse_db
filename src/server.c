@@ -12,6 +12,8 @@
 #define TRUE 1
 #define FALSE 0
 
+BOOLEAN shutdown = FALSE;
+
 BOOLEAN executeCommand(char** args){
 	if (!args || !*args){
 		fprintf(stderr, "Invalid Command\n");
@@ -20,7 +22,7 @@ BOOLEAN executeCommand(char** args){
 	
 	else if (equals(*args, "list")){
 		if (++args && *args)
-			list(atoi(*args));
+			list(atol(*args));
 		else
 			listAll();
 	}
@@ -31,7 +33,7 @@ BOOLEAN executeCommand(char** args){
 
 	else if (equals(*args, "exit")){
 		cleanUp();
-		exit(EXIT_SUCCESS);
+		shutdown = TRUE;
 	}
 
 	else {
@@ -60,7 +62,7 @@ int main(int argc, char** argv){
 	printf("Starting Server\n");	
 	initializeDatabase(atoi(*++argv));
 	
-	while(TRUE){
+	while(!shutdown){
 		newConnectionCheck();
 		checkRequest();
 	}

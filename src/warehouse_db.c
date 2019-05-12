@@ -40,7 +40,6 @@ void initializeDatabase(int maxRecords){
 	int i;
 	for (i=0; i<max; i++){
 		entries[i].id = i;
-		entries[i].client = 0;
 	}
 }
 
@@ -155,8 +154,17 @@ void cleanUp(void){
 	}
 }
 
-void list(int id){
-	
+void list(long int id){
+	int i;
+	int count = 0;
+	if (entries)
+		for (i=0; i<max; i++)
+			if (entries[i].client == id && entries[i].valid){
+				print_entry(i);
+				count++;
+			}
+	if (count == 0)
+		printf("Sorry, no entries are from Client %lu\n", id);
 }
 
 void listAll(void){

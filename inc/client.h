@@ -1,3 +1,8 @@
+struct art_entry_cache {
+	char valid;
+	int id;
+	char* name;
+};
 
 void start(char* port);
 void alloc(void);
