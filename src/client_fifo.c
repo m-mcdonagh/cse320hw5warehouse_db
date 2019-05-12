@@ -12,18 +12,12 @@
 #define TRUE 1
 #define FALSE 0
 
-BOOLEAN started = FALSE;
 int conn_est;
 int conn_conf;
 int outFifo;
 int inFifo;
 
 void start(char* port){
-	if (started){
-		fprintf(stderr, "Error: connection already established\n");
-		return;
-	}
-	started = TRUE;
 	conn_est = Open("tmp/conn_est", O_WRONLY);
 	conn_conf = Open("tmp/conn_conf", O_RDONLY);
 	write(conn_est, port, 1);

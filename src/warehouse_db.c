@@ -137,7 +137,7 @@ void cleanUp(void){
 }
 
 void print_entry(int i){
-	printf("Art Entry #%d from client %2d is%s valid.  Named %c%s%c\n", entries[i].id, entries[i].client, entries[i].valid ? "   " : "n't", entries[i].name? '\"' : '[', entries[i].name ? entries[i].name : "none", entries[i].name? '\"' : ']');
+	printf("Art Entry #%d from client %2d is%s\tNamed %c%s%c\n", entries[i].id, entries[i].client, entries[i].valid ? " valid.\t" : "n't valid.", entries[i].name? '\"' : '[', entries[i].name ? entries[i].name : "none", entries[i].name? '\"' : ']');
 }	
 
 void list(void){

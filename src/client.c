@@ -14,13 +14,28 @@
 #define FALSE 0
 
 char port[2];
+BOOLEAN started = FALSE;
 
 BOOLEAN executeCommand(char** args){
 	if (!args || !*args)
 		fprintf(stderr, "Invalid Command\n");
 	
 	else if (equals(*args, "start")){
-		start(port);
+		if (started)
+			fprintf(stderr, "Connection already established!\n");
+		else{
+			start(port);
+			started = TRUE;
+		}
+	}
+
+	else if (!started)
+		fprintf(stderr, "Please call \"start\" before calling \"%s\"\n", *args);
+	
+	else if (equals(*args, "exit")){
+		if (started)
+			closeConnection();
+		return FALSE;
 	}
 
 	else if (equals(*args, "alloc")){
@@ -54,15 +69,11 @@ BOOLEAN executeCommand(char** args){
 
 	else if (equals(*args, "close")){
 		closeConnection();
+		started = FALSE;
 	}
 
 	else if (equals(*args, "infotab")){
 		infotab();
-	}
-
-	else if (equals(*args, "exit")){
-		closeConnection();
-		return FALSE;
 	}
 
 	else 
