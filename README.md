@@ -9,4 +9,7 @@ To compile everything (including fifo\_creator), no argument is needed (just cal
 
 Calling "make clean" deletes all executables and FIFO files.
 
+----------------------------Design Decisions-------------------------------
+
+The design doc says, "Initially, \[infotab] should print the first level tables and prompt user to choose one of these tables. Then the user should be able to navigate from that first level table to the second level table." Thus my infotab prints "the first level tables and prompt user to choose one of these tables. Then the user should be able to navigate from that first level table to the second level table."
 
