@@ -19,12 +19,10 @@ BOOLEAN executeCommand(char** args){
 	}
 	
 	else if (equals(*args, "list")){
-		if (++args && *args){
-			//list ID
-		}
-		else{
+		if (++args && *args)
+			print_entry(atoi(*args));
+		else
 			list();
-		}
 	}
 
 	else if (equals(*args, "dump")){

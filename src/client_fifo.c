@@ -42,15 +42,17 @@ void start(char* port){
 	out[13] = port[0];
 	outFifo = Open(out, O_WRONLY);
 	inFifo = Open(in, O_RDONLY);
+
+	printf("Successfull Connected!\n");
 }
 
 void alloc(void){
 	char id[256];
-	write(outFifo, "alloc", 256);
+	write(outFifo, "a", 256);
 	sleep(1);
 	read(inFifo, id, 256);
 	if (equals(id, "OUT OF MEMORY")){
-		fprintf(stderr, "Error: Server out of Memory\n");
+		fprintf(stderr, "Error: Server Out of Memory\n");
 		return;
 	}
 	printf("Art Allocated with ID %s\n", id);
@@ -58,12 +60,10 @@ void alloc(void){
 
 void dealloc(int id){
 	char receipt[256];
-	char idString[256];
+	char msg[256];
 
-	write(outFifo, "dealloc", 256);
-	sleep(1);
-	sprintf(idString, "%d",  id);	
-	write(outFifo, idString, 256);
+	sprintf(msg, "d%d",  id);	
+	write(outFifo, msg, 256);
 	sleep(1);
 	
 	read(inFifo, receipt, 256);
@@ -73,9 +73,36 @@ void dealloc(int id){
 		fprintf(stderr, "Error: Deallocation Failed (make sure this client controls %d)\n", id);
 }
 
-void readId(int id){}
+void readId(int id){
+	char receipt[256];
+	char msg[256];
 
-void store(int id, char* art){}
+	sprintf(msg, "r%d", id);
+	write(outFifo, msg, 256);
+	sleep(1);
+
+	read(inFifo, receipt, 256);
+	if (receipt[0] == '\0')
+		fprintf(stderr, "Error: couldn't read name. Make sure %d has a name and this client has access to it!\n", id);
+	else
+		printf("%s\n", receipt);
+}
+
+void store(int id, char* art){
+	char receipt[256];
+	char msg[256];
+
+	sprintf(msg, "s%d", id);
+	write(outFifo, msg, 256);
+	write(outFifo, art, 256);
+	sleep(1);
+
+	read(inFifo, receipt, 256);
+	if (equals(receipt, "SUCCESS"))
+		printf("Entry %d successfully named %s\n", id, art);
+	else
+		fprintf(stderr, "Error: couldn't name %d %s. Make sure this client has access to it!\n", id, art);
+}
 
 void infotab(void){}
 

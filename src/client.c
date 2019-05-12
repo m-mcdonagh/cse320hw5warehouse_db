@@ -45,6 +45,7 @@ BOOLEAN executeCommand(char** args){
 
 	else if (equals(*args, "store")){
 		if (++args && *args && ++args && *args){
+			args--;
 			store(atoi(*--args), *++args);
 		}
 		else 
@@ -70,6 +71,11 @@ BOOLEAN executeCommand(char** args){
 	return TRUE;
 }
 
+void server_shutdown(int sig){
+	fprintf(stderr, "Error: server connection severed. Shutting down client.\n");
+	exit(EXIT_FAILURE);
+}
+
 int main(int argc, char** argv){
 	// Makes sures a correct argument was passed when client was executed (0-3).
 	if (argc != 2){
@@ -84,6 +90,7 @@ int main(int argc, char** argv){
 		fprintf(stderr, "Invalid Arguments for %s. Please enter an integer between 0-3 inclusive\n", *--argv);
 		exit(EXIT_FAILURE);
 	}
+	Signal(SIGPIPE, server_shutdown);
 	
 	port[0] = **argv;
 	port[1] = '\0';

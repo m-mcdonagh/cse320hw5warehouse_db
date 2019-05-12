@@ -80,32 +80,55 @@ void checkRequest(void){
 }
 
 void processRequest(int client, char* msg){
-	if (equals(msg, "alloc")){
-		int i;
-		for (i=0; entries[i].valid && i<max; i++);
-		if (i == max)
-			write(outFifo[client], "OUT OF MEMORY", 256);
-		else{
-			char out[256];
-			sprintf(out, "%d", i);
-			write(outFifo[client], out, 256);
-			entries[i].valid = TRUE;
-			entries[i].client = client;
-		}
+	int id;
+	switch (msg[0]){
+		case 'a':
+			for (id=0; entries[id].valid && id<max; id++);
+			if (id == max)
+				write(outFifo[client], "OUT OF MEMORY", 256);
+			else{
+				char out[256];
+				sprintf(out, "%d", id);
+				write(outFifo[client], out, 256);
+				entries[id].valid = TRUE;
+				entries[id].client = client;
+			}
+			break;
+		case 'd':
+			msg++;
+			id = atoi(msg);
+			if (id < max && id >= 0 && entries[id].client == client && entries[id].valid){
+				entries[id].valid = FALSE;
+				write(outFifo[client], "SUCCESS", 256);
+			}
+			else
+				write(outFifo[client], "FAILURE", 256);
+			break;
+		case 'r':
+			msg++;
+			id = atoi(msg);
+			if (id < max && id >= 0 && entries[id].client == client && entries[id].valid && entries[id].name)
+				write(outFifo[client], entries[id].name, 256);
+			else
+				write(outFifo[client], "\0", 256);
+			break;
+		case 's':
+			msg++;
+			id = atoi(msg);
+			sleep(1);
+			read(inFifo[id], msg, 256);
+			if (id < max && id >= 0 && entries[id].client == client && entries[id].valid){
+				if (entries[id].name)
+					free(entries[id].name);
+				entries[id].name = malloc( (strlen(msg) + 1) * sizeof(char));
+				strcpy(entries[id].name, msg);
+				write(outFifo[client], "SUCCESS", 256);
+			}
+			else
+				write(outFifo[client], "FAILURE", 256);
+			break;
+		
 	}
-	if (equals(msg, "dealloc")){
-		sleep(1);
-		char id[256];
-		read(inFifo[client], id, 256);
-		int i = atoi(id);
-		if (i < max && i >= 0 && entries[i].client == client && entries[i].valid){
-			entries[i].valid = FALSE;
-			write(outFifo[client], "SUCCESS", 256);
-		}
-		else
-			write(outFifo[client], "FAILURE", 256);
-	}
-
 }
 
 void cleanUp(void){
