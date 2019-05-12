@@ -57,7 +57,7 @@ int main(int argc, char** argv){
 	}
 	Signal(SIGINT, startShell);
 	
-	printf("Initializing Database\n");	
+	printf("Starting Server\n");	
 	initializeDatabase(atoi(*++argv));
 	
 	while(TRUE){

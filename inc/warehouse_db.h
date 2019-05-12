@@ -1,8 +1,8 @@
 struct artEntry {
 	char valid;
-	char client;
 	int id;
 	char* name;
+	unsigned long int client;
 };
 
 void initializeDatabase(int maxRecords);

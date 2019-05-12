@@ -16,6 +16,7 @@
 int max;
 int conn_est;
 int conn_conf;
+long int clients[4] = {0, 0, 0, 0};
 int inFifo[4] =    {-1,-1,-1,-1};
 int outFifo[4] =   {-1,-1,-1,-1};
 char filein[16] =  "tmp/server_in ";
@@ -39,21 +40,25 @@ void initializeDatabase(int maxRecords){
 	int i;
 	for (i=0; i<max; i++){
 		entries[i].id = i;
-		entries[i].client = -1;
+		entries[i].client = 0;
 	}
 }
 
 void newConnectionCheck(void){
-	char c = 0;
-	int index;
-	read(conn_est, &c, 1);
+	char msg[256];
+	msg[0] = 'a';
+	read(conn_est, msg, 256);
+	char c = msg[0];
 	if (isdigit(c)){
-		index = c - '0';
+		int index = c - '0';
 		if (index > 3 || index < 0 || inFifo[index] != -1 || outFifo[index] != -1){
 			write(conn_conf, "0", 1);
 			sleep(1);
 			return;
 		}
+		char* msgptr = msg;
+		msgptr++;
+		clients[index] = atol(msgptr);
 		write(conn_conf, "1", 1);
 		filein[13] = c;
 		fileout[14] = c;
@@ -79,62 +84,63 @@ void checkRequest(void){
 	}
 }
 
-void processRequest(int client, char* msg){
+void processRequest(int port, char* msg){
 	int id;
 	switch (msg[0]){
 		case 'a':
 			for (id=0; entries[id].valid; id++)
 				if (id == max){
-					write(outFifo[client], "OUT OF MEMORY", 256);
+					write(outFifo[port], "OUT OF MEMORY", 256);
 					return;
 				}
 			char out[256];
 			sprintf(out, "%d", id);
-			write(outFifo[client], out, 256);
+			write(outFifo[port], out, 256);
 			entries[id].valid = TRUE;
-			entries[id].client = client;
+			entries[id].client = clients[port];
 			break;
 		case 'd':
 			msg++;
 			id = atoi(msg);
-			if (id < max && id >= 0 && entries[id].client == client && entries[id].valid){
+			if (id < max && id >= 0 && entries[id].client == clients[port] && entries[id].valid){
 				entries[id].valid = FALSE;
-				write(outFifo[client], "SUCCESS", 256);
+				write(outFifo[port], "SUCCESS", 256);
 			}
 			else
-				write(outFifo[client], "FAILURE", 256);
+				write(outFifo[port], "FAILURE", 256);
 			break;
 		case 'r':
 			msg++;
 			id = atoi(msg);
-			if (id < max && id >= 0 && entries[id].client == client && entries[id].valid && entries[id].name)
-				write(outFifo[client], entries[id].name, 256);
+			if (id < max && id >= 0 && entries[id].client == clients[port] && entries[id].valid && entries[id].name)
+				write(outFifo[port], entries[id].name, 256);
 			else
-				write(outFifo[client], "\0", 256);
+				write(outFifo[port], "\0", 256);
 			break;
 		case 's':
 			msg++;
 			id = atoi(msg);
 			sleep(1);
-			read(inFifo[id], msg, 256);
-			if (id < max && id >= 0 && entries[id].client == client && entries[id].valid){
+			read(inFifo[port], msg, 256);
+			if (id < max && id >= 0 && entries[id].client == clients[port] && entries[id].valid){
 				if (entries[id].name)
 					free(entries[id].name);
 				entries[id].name = malloc( (strlen(msg) + 1) * sizeof(char));
 				strcpy(entries[id].name, msg);
-				write(outFifo[client], "SUCCESS", 256);
+				write(outFifo[port], "SUCCESS", 256);
 			}
 			else
-				write(outFifo[client], "FAILURE", 256);
+				write(outFifo[port], "FAILURE", 256);
 			break;
 		case 'c':
-			close(inFifo[client]);
-			close(outFifo[client]);
-			inFifo[client] = -1;
-			outFifo[client] = -1;
+			close(inFifo[port]);
+			close(outFifo[port]);
+			inFifo[port] = -1;
+			outFifo[port] = -1;
 			for (id=0; id<max; id++)
-				if (entries[id].client == client)
+				if (entries[id].client == clients[port])
 					entries[id].valid = FALSE;
+			clients[port] = 0;
 			break;
 	}
 }
@@ -150,15 +156,21 @@ void cleanUp(void){
 }
 
 void list(int id){
-
+	
 }
 
 void listAll(void){
-
+	int i;
+	for (i=0; i<4; i++){
+		if (clients[i])
+			printf("Port %d: %lu\n", i, clients[i]);
+		else 
+			printf("Port %d: [none]\n", i);
+	}
 }
 
 void print_entry(int i){
-	printf("Art Entry #%d from client %2d is%s\tNamed %c%s%c\n", entries[i].id, entries[i].client, entries[i].valid ? " valid.\t" : "n't valid.", entries[i].name? '\"' : '[', entries[i].name ? entries[i].name : "none", entries[i].name? '\"' : ']');
+	printf("Art Entry #%d from client %15lu is%s valid.\tNamed %c%s%c\n", entries[i].id, entries[i].client, entries[i].valid ? "" : "n't", entries[i].name? '\"' : '[', entries[i].name ? entries[i].name : "none", entries[i].name? '\"' : ']');
 }
 
 void dump(void){

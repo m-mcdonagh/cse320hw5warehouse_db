@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include <pthread.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -17,11 +18,16 @@ int conn_est;
 int conn_conf;
 int outFifo;
 int inFifo;
+pthread_t tid;
 
-void start(char* port){
+void* connect(void* voidptr){
+	char* port = (char*)voidptr;
 	conn_est = Open("tmp/conn_est", O_WRONLY);
 	conn_conf = Open("tmp/conn_conf", O_RDONLY);
-	write(conn_est, port, 1);
+	
+	char msg[256];
+	sprintf(msg, "%s%ld", port, pthread_self());
+	write(conn_est, msg, 256);
 	sleep(1);
 	char c;
 	read(conn_conf, &c, 1);
@@ -38,7 +44,12 @@ void start(char* port){
 	outFifo = Open(out, O_WRONLY);
 	inFifo = Open(in, O_RDONLY);
 
-	printf("Successfull Connected!\n");
+	printf("\nSuccessfully Connected!\n> ");
+	fflush(stdout);
+}
+
+void start(char* port){
+	pthread_create(&tid, NULL, connect, (void *)port);
 }
 
 void alloc(void){
@@ -106,10 +117,13 @@ void infotab(void){}
 
 void closeConnection(void){
 	write(outFifo, "close", 256);
+	pthread_join(tid, NULL);
 	sleep(1);
 
 	close(conn_est);
 	close(conn_conf);
 	close(outFifo);
 	close(inFifo);
+
+	printf("Successfully Disconnected\n");
 }
