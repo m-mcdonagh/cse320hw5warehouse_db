@@ -2,22 +2,20 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include "warehouse_db.h"
 #include "error_checking.h"
-#include "shell.h"
+#include "new_shell.h"
 #define equals(s1, s2) !strcmp(s1, s2)
 #define BOOLEAN char
 #define TRUE 1
 #define FALSE 0
 
-BOOLEAN shutdown = FALSE;
-
 BOOLEAN executeCommand(char** args){
 	if (!args || !*args){
 		fprintf(stderr, "Invalid Command\n");
-		return TRUE;
 	}
 	
 	else if (equals(*args, "list")){
@@ -33,12 +31,11 @@ BOOLEAN executeCommand(char** args){
 
 	else if (equals(*args, "exit")){
 		cleanUp();
-		shutdown = TRUE;
+		return TRUE;
 	}
 
 	else {
 		fprintf(stderr, "Invalid Command\n");
-		return TRUE;
 	}
 
 	return FALSE;
@@ -62,7 +59,7 @@ int main(int argc, char** argv){
 	printf("Starting Server\n");	
 	initializeDatabase(atoi(*++argv));
 	
-	while(!shutdown){
+	while(TRUE){
 		newConnectionCheck();
 		checkRequest();
 	}
