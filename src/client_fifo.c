@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include <string.h>
 #include <fcntl.h>
 #include <sys/types.h>
@@ -49,7 +50,10 @@ void alloc(void){
 		fprintf(stderr, "Error: Server Out of Memory\n");
 		return;
 	}
-	printf("Art Allocated with ID %s\n", id);
+	if (isdigit(*id))
+		printf("Art Allocated with ID %s\n", id);
+	else
+		fprintf(stderr, "Error please try again\n");
 }
 
 void dealloc(int id){
@@ -100,4 +104,12 @@ void store(int id, char* art){
 
 void infotab(void){}
 
-void closeConnection(void){}
+void closeConnection(void){
+	write(outFifo, "close", 256);
+	sleep(1);
+
+	close(conn_est);
+	close(conn_conf);
+	close(outFifo);
+	close(inFifo);
+}

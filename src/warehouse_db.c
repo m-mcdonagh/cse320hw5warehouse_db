@@ -83,16 +83,16 @@ void processRequest(int client, char* msg){
 	int id;
 	switch (msg[0]){
 		case 'a':
-			for (id=0; entries[id].valid && id<max; id++);
-			if (id == max)
-				write(outFifo[client], "OUT OF MEMORY", 256);
-			else{
-				char out[256];
-				sprintf(out, "%d", id);
-				write(outFifo[client], out, 256);
-				entries[id].valid = TRUE;
-				entries[id].client = client;
-			}
+			for (id=0; entries[id].valid; id++)
+				if (id == max){
+					write(outFifo[client], "OUT OF MEMORY", 256);
+					return;
+				}
+			char out[256];
+			sprintf(out, "%d", id);
+			write(outFifo[client], out, 256);
+			entries[id].valid = TRUE;
+			entries[id].client = client;
 			break;
 		case 'd':
 			msg++;
@@ -127,18 +127,31 @@ void processRequest(int client, char* msg){
 			else
 				write(outFifo[client], "FAILURE", 256);
 			break;
-		
+		case 'c':
+			close(inFifo[client]);
+			close(outFifo[client]);
+			inFifo[client] = -1;
+			outFifo[client] = -1;
+			for (id=0; id<max; id++)
+				if (entries[id].client == client)
+					entries[id].valid = FALSE;
+			break;
 	}
 }
 
 void cleanUp(void){
-	if (entries)
+	int i;
+	if (entries){
+		for (i=0; i<max; i++)
+			if (entries[i].name)
+				free(entries[i].name);
 		free(entries);
+	}
 }
 
 void print_entry(int i){
 	printf("Art Entry #%d from client %2d is%s\tNamed %c%s%c\n", entries[i].id, entries[i].client, entries[i].valid ? " valid.\t" : "n't valid.", entries[i].name? '\"' : '[', entries[i].name ? entries[i].name : "none", entries[i].name? '\"' : ']');
-}	
+}
 
 void list(void){
 	int i;

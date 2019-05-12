@@ -29,15 +29,15 @@ BOOLEAN executeCommand(char** args){
 		}
 	}
 
-	else if (!started)
-		fprintf(stderr, "Please call \"start\" before calling \"%s\"\n", *args);
-	
 	else if (equals(*args, "exit")){
 		if (started)
 			closeConnection();
 		return FALSE;
 	}
 
+	else if (!started)
+		fprintf(stderr, "Please call \"start\" before calling \"%s\"\n", *args);
+	
 	else if (equals(*args, "alloc")){
 		alloc();
 	}
